@@ -8,7 +8,7 @@ function varargout = crop_image(varargin)
 %        I2 = crop_image(I)
 %        X2 = crop_image(X,MAP)
 %        RGB2 = crop_image(RGB)
-% Written by Daniel Buscombe, various times in 2012 and 2013
+% Written by Daniel Buscombe, various times in 2012-2014
 % while at
 % School of Marine Science and Engineering, University of Plymouth, UK
 % then

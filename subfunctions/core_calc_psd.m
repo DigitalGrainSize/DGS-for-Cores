@@ -2,7 +2,7 @@
 % calc_psd
 % calculates PSD for each ROI
 % 
-% Written by Daniel Buscombe, various times in 2012 and 2013
+% Written by Daniel Buscombe, various times in 2012-2014
 % while at
 % School of Marine Science and Engineering, University of Plymouth, UK
 % then
@@ -22,7 +22,7 @@
 %====================================
 
 dofilt=0;
-density=10;
+density=5;
 start_size=3;
 
 MotherWav='Morlet';
@@ -49,7 +49,8 @@ if sample(ix).num_roi>0
         sample(ix).geom_moments(l,2) = 1000*2^-sample(ix).geom_moments(l,2);
     end
     
-    sample(ix).locations=[1:density:size(sample(ix).data,1)];
+    sample(ix).locations=linspace(1,size(sample(ix).data,1),size(P,2));
+    %[1:density:size(sample(ix).data,1)];
     
     h=findobj('Tag','plot_axes');
     axes(h)

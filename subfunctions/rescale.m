@@ -3,7 +3,7 @@ function out=rescale(in,mn,mx)
 %rescales a vector or matrix so it spans the range mn (min) - mx (max)
 %in = vector/matrix to be rescaled
 % 
-% Written by Daniel Buscombe, various times in 2012 and 2013
+% Written by Daniel Buscombe, various times in 2012-2014
 % while at
 % School of Marine Science and Engineering, University of Plymouth, UK
 % then

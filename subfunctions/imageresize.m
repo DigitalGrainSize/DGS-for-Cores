@@ -9,7 +9,7 @@ function img_out=imageresize(img_in, rowScale, colScale);
 %            imoutL = imageresize(imin, 2, 2); % enlarge image
 %            imoutS = imageresize(imin, 0.2, 0.2) % shrink image
 % 
-% Written by Daniel Buscombe, various times in 2012 and 2013
+% Written by Daniel Buscombe, various times in 2012-2014
 % while at
 % School of Marine Science and Engineering, University of Plymouth, UK
 % then

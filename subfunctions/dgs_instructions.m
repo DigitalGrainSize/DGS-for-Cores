@@ -2,8 +2,8 @@
 A tool for the automated estimation of size-distribution in images 
 of sediment and other granular material
 
-Version 1.0
-Written by Daniel Buscombe, various times in 2013
+Version 2.0
+Written by Daniel Buscombe, various times in 2012-2014
 while at
 Grand Canyon Monitoring and Research Center, U.G. Geological Survey, Flagstaff, AZ 
 please contact:
