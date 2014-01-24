@@ -22,8 +22,10 @@
 %====================================
 
 dofilt=0;
-density=5;
+density=10;
 start_size=3;
+
+winsize = 50; % size of window in vertical direction
 
 MotherWav='Morlet';
 Args=struct('Pad',1,...      % pad the time series with zeroes (recommended)
@@ -34,7 +36,7 @@ Args=struct('Pad',1,...      % pad the time series with zeroes (recommended)
 
 if sample(ix).num_roi>0
     
-    [P,scale]=core_get_psd(sample(ix).roi{1},density,Args,ix);
+    [vr,P,scale]=core_get_psd(sample(ix).roi{1},density,Args,ix,winsize);
     
     sample(ix).dist=P;
     sample(ix).scale=scale.*sample(ix).resolution;
@@ -43,13 +45,13 @@ if sample(ix).num_roi>0
     sample(ix).geom_moments=zeros(size(P,2),4);
     sample(ix).arith_moments=zeros(size(P,2),4);
     
-    for l=1:size(P,2)
+    for l=1:size(P,1)
         [sample(ix).percentiles(l,:),sample(ix).geom_moments(l,:),...
-            sample(ix).arith_moments(l,:)]=gsdparams(P(:,l),sample(ix).scale);
+            sample(ix).arith_moments(l,:)]=gsdparams(P(l,:),sample(ix).scale);
         sample(ix).geom_moments(l,2) = 1000*2^-sample(ix).geom_moments(l,2);
     end
     
-    sample(ix).locations=linspace(1,size(sample(ix).data,1),size(P,2));
+    sample(ix).locations=linspace(1,size(sample(ix).data,1),size(P,1));
     %[1:density:size(sample(ix).data,1)];
     
     h=findobj('Tag','plot_axes');

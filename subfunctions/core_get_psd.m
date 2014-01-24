@@ -1,5 +1,5 @@
 
-function [P1,scale]=core_get_psd(himt,density,Args,ii)
+function [vr,P,scale]=core_get_psd(himt,density,Args,ii, ywin)
 % 
 % Written by Daniel Buscombe, various times in 2012-2014
 % while at
@@ -19,72 +19,71 @@ function [P1,scale]=core_get_psd(himt,density,Args,ii)
 %   For more information, see the official USGS copyright policy at 
 %   http://www.usgs.gov/visual-id/credit_usgs.html#copyright
 %====================================
-
+% 
+% for testing/debugging
+% addpath(genpath(pwd))
+% clear all;clc
+% 
+% dofilt=0;
+% density=10;
+% start_size=3;
+% 
+% MotherWav='Morlet';
+% Args=struct('Pad',1,...      % pad the time series with zeroes (recommended)
+%     'Dj',1/8,... %8, ...    % this will do dj sub-octaves per octave
+%     'S0',start_size,...    % this says start at a scale of X pixels
+%     'J1',[],...
+%     'Mother',MotherWav);
+% 
 % ii=1;
-% density =10;
 % himt=double(imread('./images/313-M0027A-014H-01_scan.tiff_crop.tif'));
+% 
+% ywin = 50; 
 
-blockSize = 500; % Rows in block.
-prc_overlap = 50; % overlap in percent
+xwin = size(himt,2);
 
-% cut image into blocks with specified overlap
+% prc_overlapy = 50; % overlap in percent
+% prc_overlapx = 99; % overlap in percent
 
-[rows blockSizeC] = size(himt);
+% overlap in number of rows/columns
+yshift = density; %round((xwin/100)*(100-prc_overlapy))
+xshift = density; %round((xwin/100)*(100-prc_overlapx))
 
-% overlap in number of rows
-overlap = round((blockSize/100)*(100-prc_overlap));
+[Ny, Nx] = size(himt);
 
-wholeBlockRows = floor(rows / blockSize);
-blockVectorR = [blockSize * ones(1, wholeBlockRows), rem(rows, blockSize)];
-blockVectorC = [blockSizeC * ones(1, 1), rem(blockSizeC, blockSizeC)];
-ca1 = mat2cell(himt, blockVectorR, blockVectorC);
+% Round xwin and ywin to nearest odd integer
+xwin = fix(xwin); ywin = fix(ywin);
+if rem(xwin,2)==0, xwin=xwin+1; end
+if rem(ywin,2)==0, ywin=ywin+1; end
 
-ca1(cellfun(@isempty,ca1))=[];
-ca1 = ca1';
+% Make x and y index vectors that define the window
+xwin = (1:xwin)-(xwin+1)/2;
+ywin = (1:ywin)-(ywin+1)/2;
 
-% shorten image by overlap pixels
-himt = himt(overlap:end,:);
-[rows blockSizeC] = size(himt);
+% Identify window center locations
+xshift = round(xshift);
+yshift = round(yshift);
 
-wholeBlockRows = floor(rows / blockSize);
-blockVectorR = [blockSize * ones(1, wholeBlockRows), rem(rows, blockSize)];
-blockVectorC = [blockSizeC * ones(1, 1), rem(blockSizeC, blockSizeC)];
-ca2 = mat2cell(himt, blockVectorR, blockVectorC);
+ic = 1:yshift:Ny;
+jc = 1:xshift:Nx;
 
-ca2(cellfun(@isempty,ca2))=[];
-ca2 = ca2';
+P1 = cell(length(ic),length(jc));
 
-% interleave the 2 cells
-ca = cell(size(ca1,1)+size(ca2,1),1);
-counter=1;
-for k=1:2:size(ca,1)
-    ca{k,1} = ca1{counter,1};
-    counter = counter+1;
-end
-
-counter=1;
-for k=2:2:size(ca,1)
-    ca{k,1} = ca2{counter,1};
-    counter = counter+1;
-end
-
-% process each block by row density 'density'
-W1=cell(1,size(ca,1));
+v = zeros(length(ic),length(jc));
 
 h = waitbar(0,['Please wait... processing image ',num2str(ii)]);
 
-for kk=1:size(ca,1)
-    
-    himt = ca{kk,1};
-    [rows,cols] = size(himt);
-    
-    W1{kk}=cell(1,size([1:density:rows],2));
-    
-    for j=1:density:rows
+for i = 1:length(ic)
+    for j = 1:length(jc)
         
-        x=himt(j,:); x=x(:);
+        x = himt(ic(i)+ywin((ic(i)+ywin)>0 & (ic(i)+ywin)<=Ny),...
+            jc(j)+xwin((jc(j)+xwin)>0 & (jc(j)+xwin)<=Nx));
+        
+        x=x(1,:); x=x(:);
         tr=polyval(polyfit([1:length(x)]',x,1),[1:length(x)]');
         x=x-tr;
+        
+        cols = length(x);
         
         J1=fix((log(cols*1/Args.S0)/log(2))/Args.Dj);
         
@@ -106,6 +105,7 @@ for kk=1:size(ca,1)
         
         %....construct SCALE array & empty PERIOD & WAVE arrays
         scale = Args.S0*2.^((0:J1)*Args.Dj);
+        
         wave = zeros(J1+1,n);  % define the wavelet array
         wave = wave + 1i*wave;  % make it complex
         % loop through all scales and compute transform
@@ -131,48 +131,43 @@ for kk=1:size(ca,1)
             smooth=ifft(F.*fft(wave(ii,:),npad));
             twave(ii,:)=smooth(1:cols);
         end
-        scale=scale./2;
         
         if isreal(wave)
             twave=real(twave);
         end
         
-        W1{kk}{j}=var(twave,[],2);
+        P1{i,j}=var(twave,[],2);
         
-        keep W1 j himt rows cols Args scale h density ca kk
+        v(i,j) = sum(P1{i,j}./sum(P1{i,j}) .* scale');
         
+        %keep P1 v himt Args scale h i j ic jc ii xwin ywin Ny Nx
         
     end
-    waitbar(kk/size(ca,1),h)
     
+    waitbar(i/length(ic),h)
     
 end
+
 close(h)
 
+vr = imresize(v,[Ny Nx]);
+clear v
 
-P1 = cell(size(ca,1),1);
-for kk = 1:size(ca,1)
-    W1{kk}=cell2mat(W1{kk});
-    P1{kk} = ndnanfilter(W1{kk},@rectwin,[1 10]);
-    for k=1:size(P1{kk},2)
-        P1{kk}(:,k)=P1{kk}(:,k)./sum(P1{kk}(:,k));
+%imagesc(vr); axis image; colorbar
+
+mindim = min(min(cell2mat(cellfun(@length,P1, 'UniformOutput',0))));
+
+for i = 1:length(ic)
+    for j = 1:length(jc)
+        P1{i,j}=P1{i,j}(1:mindim);
+        P1{i,j}=P1{i,j}./sum(P1{i,j});
     end
-    %P1{kk} = mean(P1{kk},2);
 end
 
-P2 = [cell2mat(P1(1:end-2)'),cell2mat(P1(end-1)),cell2mat(P1(end))]';
+P=zeros(length(ic),length(scale));
+for i = 1:length(ic)
+    P(i,:) = mean(cell2mat({P1{i,:}}),2);
+end
 
-% average by density rows
-[rows blockSizeC] = size(P2);
-blockSize = density;
-
-wholeBlockRows = floor(rows / blockSize);
-blockVectorR = [blockSize * ones(1, wholeBlockRows), rem(rows, blockSize)];
-blockVectorC = [blockSizeC * ones(1, 1), rem(blockSizeC, blockSizeC)];
-P1 = mat2cell(P2, blockVectorR, blockVectorC);
-
-P1(cellfun(@isempty,P1))=[];
-P1 = P1';
-P1 = cellfun(@mean,P1, 'UniformOutput',0);
-P1 = cell2mat(P1)';
+% P1 = cell2mat(P1);
 
