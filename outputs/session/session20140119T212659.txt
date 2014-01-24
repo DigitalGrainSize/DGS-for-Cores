@@ -1,4 +1,0 @@
-%session began at 2014-01-19 21:26:59
-%------------------------
-%User selected /home/filfy/github_clones/DGS-for-Cores/images/313-M0027A-014H-01_scan.tiff_crop.tif
-%User selected /home/filfy/github_clones/DGS-for-Cores/images/313-M0027A-168R-01_scan.tiff_crop.tif

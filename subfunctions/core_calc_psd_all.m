@@ -22,8 +22,10 @@
 %====================================
 
 dofilt=0;
-density=5;
+density=10;
 start_size=3;
+
+winsize = 50; % size of window in vertical direction
 
 MotherWav='Morlet';
 Args=struct('Pad',1,...      % pad the time series with zeroes (recommended)
@@ -45,7 +47,7 @@ else
             
             if sample(ix).num_roi>0
                 
-                [P,scale]=core_get_psd(sample(ii).roi{1},density,Args,ii);
+                [P,scale]=core_get_psd(sample(ii).roi{1},density,Args,ii, winsize);
                 
                 sample(ii).dist=P;
                 sample(ii).scale=scale.*sample(ix).resolution;
@@ -56,11 +58,11 @@ else
                 
                 for l=1:size(P,2)
                     [sample(ii).percentiles(l,:),sample(ii).geom_moments(l,:),...
-                        sample(ii).arith_moments(l,:)]=gsdparams(P(:,l),sample(ii).scale);
+                        sample(ii).arith_moments(l,:)]=gsdparams(P(l,:),sample(ii).scale);
                     sample(ii).geom_moments(l,2) = 1000*2^-sample(ii).geom_moments(l,2);
                 end
                 
-                sample(ii).locations=linspace(1,size(sample(ii).data,1),size(P,2));
+                sample(ii).locations=linspace(1,size(sample(ii).data,1),size(P,1));
                 %[1:density:size(sample(ii).data,1)];
 
                 
@@ -84,7 +86,7 @@ else
         axes(h)
         cla(ax2)
         
-        pcolor(sample(ix).scale,sample(ix).locations,sample(ix).dist')
+        pcolor(sample(ix).scale,sample(ix).locations,sample(ix).dist)
         shading flat
         
         if sample(ix).resolution==1

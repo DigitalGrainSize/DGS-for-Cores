@@ -58,7 +58,7 @@ if sample(ix).num_roi>0
     axes(h)
     cla(ax2)
     
-    pcolor(sample(ix).scale,sample(ix).locations,sample(ix).dist')
+    pcolor(sample(ix).scale,sample(ix).locations,sample(ix).dist)
     shading flat
     
     if sample(ix).resolution==1
