@@ -31,7 +31,7 @@ for ii=1:length(sample)
     
     if ~isempty(sample(ii).dist)
         
-        numhead=num2cell(sample(ii).dist(:,1)');
+        numhead=num2cell(sample(ii).scale); %dist(:,1)');
         numhead(cell2mat(cellfun(zeroFun,numhead,'UniformOutput',0)))={NaN};
         heads={'location','arith_mean','arith_sort','arith_skew','arith_kurt',...
             'geom_mean','geom_sort','geom_skew','geom_kurt',...
@@ -76,7 +76,7 @@ for ii=1:length(sample)
         else
             towrite=[num2cell([sample(ii).arith_moments,sample(ii).geom_moments,...
                 sample(ii).percentiles,...
-                nan(size(sample(ii).arith_moments,1),4),sample(ii).dist'])];
+                nan(size(sample(ii).arith_moments,1),4),sample(ii).dist])];
         end
         
         

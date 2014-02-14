@@ -1,5 +1,5 @@
 
-function [vr,P,scale]=core_get_psd(himt,density,Args,ii, ywin)
+function [P,scale]=core_get_psd(himt,density,Args,ii, ywin)
 % 
 % Written by Daniel Buscombe, various times in 2012-2014
 % while at
@@ -19,29 +19,28 @@ function [vr,P,scale]=core_get_psd(himt,density,Args,ii, ywin)
 %   For more information, see the official USGS copyright policy at 
 %   http://www.usgs.gov/visual-id/credit_usgs.html#copyright
 %====================================
-% 
-% for testing/debugging
+%
+% %%%for testing/debugging
 % addpath(genpath(pwd))
 % clear all;clc
-% 
-% dofilt=0;
+%
 % density=10;
 % start_size=3;
-% 
+%
 % MotherWav='Morlet';
 % Args=struct('Pad',1,...      % pad the time series with zeroes (recommended)
 %     'Dj',1/8,... %8, ...    % this will do dj sub-octaves per octave
 %     'S0',start_size,...    % this says start at a scale of X pixels
 %     'J1',[],...
 %     'Mother',MotherWav);
-% 
+%
 % ii=1;
-% himt=double(imread('./images/313-M0027A-014H-01_scan.tiff_crop.tif'));
-% 
-% ywin = 50; 
+% himt=double(imread('./images/313-M0027A-168R-01_scan.tiff_crop.tif'));
+%
+% ywin = 267;
+% %%%for testing/debugging
 
 xwin = size(himt,2);
-
 % prc_overlapy = 50; % overlap in percent
 % prc_overlapx = 99; % overlap in percent
 
@@ -69,7 +68,7 @@ jc = 1:xshift:Nx;
 
 P1 = cell(length(ic),length(jc));
 
-v = zeros(length(ic),length(jc));
+% v = zeros(length(ic),length(jc));
 
 h = waitbar(0,['Please wait... processing image ',num2str(ii)]);
 
@@ -104,7 +103,7 @@ for i = 1:length(ic)
         f = fft(Y);    % [Eqn(3)]
         
         %....construct SCALE array & empty PERIOD & WAVE arrays
-        scale = Args.S0*2.^((0:J1)*Args.Dj);
+        scale = (1/pi)*(Args.S0*2.^((0:J1)*Args.Dj));
         
         wave = zeros(J1+1,n);  % define the wavelet array
         wave = wave + 1i*wave;  % make it complex
@@ -136,11 +135,8 @@ for i = 1:length(ic)
             twave=real(twave);
         end
         
-        P1{i,j}=var(twave,[],2);
-        
-        v(i,j) = sum(P1{i,j}./sum(P1{i,j}) .* scale');
-        
-        %keep P1 v himt Args scale h i j ic jc ii xwin ywin Ny Nx
+        n = (0:length(scale)-1)'-(length(scale)-1)/2;
+        P1{i,j}=var(twave,[],2).*exp(-(1/2)*((pi/2)*n/((length(scale)-1)/2)).^2);
         
     end
     
@@ -149,11 +145,6 @@ for i = 1:length(ic)
 end
 
 close(h)
-
-vr = imresize(v,[Ny Nx]);
-clear v
-
-%imagesc(vr); axis image; colorbar
 
 mindim = min(min(cell2mat(cellfun(@length,P1, 'UniformOutput',0))));
 
@@ -164,10 +155,18 @@ for i = 1:length(ic)
     end
 end
 
-P=zeros(length(ic),length(scale));
+P=zeros(length(ic),mindim);
 for i = 1:length(ic)
-    P(i,:) = mean(cell2mat({P1{i,:}}),2);
+    P(i,:) = median(cell2mat({P1{i,:}}),2);
 end
 
 % P1 = cell2mat(P1);
 
+%vr = imresize(v,[Ny Nx]);
+% clear v
+%imagesc(vr); axis image; colorbar
+%v(i,j) = sum(P1{i,j}./sum(P1{i,j}) .* scale');
+
+%keep P1 v himt Args scale h i j ic jc ii xwin ywin Ny Nx
+
+        
