@@ -1,13 +1,20 @@
- dgs_core_gui.m
+### About
+
+![alt tag](http://dbuscombe-usgs.github.io/figs/2013-02-24-dgs/nicegrains1.jpg)
 
 MATLAB software to calculate the grain size distribution from an image of sediment or other granular material
 
 Intended for use when the vertical variation in grain size is important, such as in well resolved scans of sedimentary cores
 
+### Setup
+
 To run the program, download and unzip, open MATLAB, cd to the DGS-master directory, then in the command window type:
 
+```
 dgs_core_gui 
+```
 
+### Contributing & Credits
 
 This program implements the algorithm of 
 
